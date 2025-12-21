@@ -32,11 +32,13 @@ def train_and_load_model():
     from sklearn.ensemble import RandomForestClassifier
 
     df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    df.columns=df.columns.str.strip()
 
     if 'customerID' in df.columns:
         df.drop("customerID",axis=1,inplace=True)
 
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+    if 'TotalCharges' in df.columns:
+        df['TotalCharges']=pd.to_numeric(df['TotalCharges'],errors='coerce')
     df["TotalCharges"].fillna(df["TotalCharges"].median(), inplace=True)
 
     assert 'Churn' in df.columns, "Target column 'Churn' missing"
@@ -212,4 +214,5 @@ st.caption(
     "Note: The prediction reflects model confidence based on historical data. "
     "It is intended for decision-support purposes, not a guarantee of behavior."
 )
+
 
