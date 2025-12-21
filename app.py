@@ -3,23 +3,15 @@ import pandas as pd
 import joblib
 
 # ----------------------------
-# App Config
+# Page Configuration
 # ----------------------------
 st.set_page_config(
-    page_title="Customer Churn Prediction",
-    layout="centered"
+    page_title="Customer Churn Analytics",
+    layout="wide"
 )
-
-st.title("Customer Churn Analytics Dashboard")
-st.write(
-    "This application predicts the likelihood of a telecom customer "
-    "leaving the service based on account and usage details."
-)
-
-st.caption("Developed by Akshaya")
 
 # ----------------------------
-# Load Trained Model
+# Load Model
 # ----------------------------
 @st.cache_resource
 def load_model():
@@ -28,47 +20,71 @@ def load_model():
 model = load_model()
 
 # ----------------------------
-# User Input Form
+# Header
 # ----------------------------
-st.subheader("Enter Customer Details")
+st.markdown(
+    """
+    <h1 style="text-align:center;">Customer Churn Analytics Dashboard</h1>
+    <p style="text-align:center; font-size:16px;">
+    Predict whether a telecom customer is likely to leave the service
+    </p>
+    <p style="text-align:center; font-size:13px;">
+    Developed by <b>Akshaya</b>
+    </p>
+    <hr>
+    """,
+    unsafe_allow_html=True
+)
 
-gender = st.selectbox("Gender", ["Male", "Female"])
-senior = st.selectbox("Senior Citizen", ["Yes", "No"])
-partner = st.selectbox("Has Partner", ["Yes", "No"])
-dependents = st.selectbox("Has Dependents", ["Yes", "No"])
-tenure = st.slider("Tenure (months)", 0, 72, 12)
+# ----------------------------
+# Sidebar Inputs
+# ----------------------------
+st.sidebar.header("Customer Information")
 
-phone_service = st.selectbox("Phone Service", ["Yes", "No"])
-multiple_lines = st.selectbox("Multiple Lines", ["Yes", "No", "No phone service"])
+gender = st.sidebar.selectbox("Gender", ["Male", "Female"])
+senior = st.sidebar.selectbox("Senior Citizen", ["Yes", "No"])
+partner = st.sidebar.selectbox("Has Partner", ["Yes", "No"])
+dependents = st.sidebar.selectbox("Has Dependents", ["Yes", "No"])
 
-internet_service = st.selectbox(
+tenure = st.sidebar.slider("Tenure (Months)", 0, 72, 12)
+
+st.sidebar.header("Services")
+
+phone_service = st.sidebar.selectbox("Phone Service", ["Yes", "No"])
+multiple_lines = st.sidebar.selectbox(
+    "Multiple Lines", ["Yes", "No", "No phone service"]
+)
+
+internet_service = st.sidebar.selectbox(
     "Internet Service", ["DSL", "Fiber optic", "No"]
 )
 
-online_security = st.selectbox(
+online_security = st.sidebar.selectbox(
     "Online Security", ["Yes", "No", "No internet service"]
 )
-online_backup = st.selectbox(
+online_backup = st.sidebar.selectbox(
     "Online Backup", ["Yes", "No", "No internet service"]
 )
-device_protection = st.selectbox(
+device_protection = st.sidebar.selectbox(
     "Device Protection", ["Yes", "No", "No internet service"]
 )
-tech_support = st.selectbox(
+tech_support = st.sidebar.selectbox(
     "Tech Support", ["Yes", "No", "No internet service"]
 )
-streaming_tv = st.selectbox(
+streaming_tv = st.sidebar.selectbox(
     "Streaming TV", ["Yes", "No", "No internet service"]
 )
-streaming_movies = st.selectbox(
+streaming_movies = st.sidebar.selectbox(
     "Streaming Movies", ["Yes", "No", "No internet service"]
 )
 
-contract = st.selectbox(
+st.sidebar.header("Billing Details")
+
+contract = st.sidebar.selectbox(
     "Contract Type", ["Month-to-month", "One year", "Two year"]
 )
-paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
-payment_method = st.selectbox(
+paperless_billing = st.sidebar.selectbox("Paperless Billing", ["Yes", "No"])
+payment_method = st.sidebar.selectbox(
     "Payment Method",
     [
         "Electronic check",
@@ -78,17 +94,19 @@ payment_method = st.selectbox(
     ]
 )
 
-monthly_charges = st.number_input(
+monthly_charges = st.sidebar.number_input(
     "Monthly Charges", min_value=0.0, value=70.0
 )
-total_charges = st.number_input(
+total_charges = st.sidebar.number_input(
     "Total Charges", min_value=0.0, value=1000.0
 )
 
 # ----------------------------
-# Prediction
+# Main Panel
 # ----------------------------
-if st.button("Predict Churn Risk"):
+st.subheader("Prediction Output")
+
+if st.sidebar.button("Predict Churn Risk"):
     input_df = pd.DataFrame({
         "gender": [gender],
         "SeniorCitizen": [1 if senior == "Yes" else 0],
@@ -115,20 +133,25 @@ if st.button("Predict Churn Risk"):
         prediction = model.predict(input_df)[0]
         probability = model.predict_proba(input_df)[0][1]
 
-        st.subheader("Prediction Result")
+        st.markdown("### Risk Assessment")
 
-        if prediction == 1:
-            st.error(
-                f"High risk of churn\n\nEstimated probability: {probability:.2%}"
-            )
-        else:
-            st.success(
-                f"Low risk of churn\n\nEstimated probability: {probability:.2%}"
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if prediction == 1:
+                st.error("High Risk Customer")
+            else:
+                st.success("Low Risk Customer")
+
+        with col2:
+            st.metric(
+                label="Estimated Churn Probability",
+                value=f"{probability:.2%}"
             )
 
-        st.caption(
-            "Probability indicates the model's confidence, "
-            "not a medical or financial guarantee."
+        st.info(
+            "This probability reflects the model's confidence based on historical patterns. "
+            "It is not a guarantee of customer behavior."
         )
 
     except Exception as e:
