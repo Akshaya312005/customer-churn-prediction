@@ -2,211 +2,135 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# ---------------------------------
-# Page config
-# ---------------------------------
+# ----------------------------
+# App Config
+# ----------------------------
 st.set_page_config(
-    page_title="Customer Churn Analytics",
-    layout="wide",
+    page_title="Customer Churn Prediction",
+    layout="centered"
 )
 
-st.title("📊 Customer Churn Analytics Dashboard")
-st.markdown(
-    """
-    This application estimates the likelihood of a customer leaving a telecom service 
-    based on usage patterns and account details.
-    """
+st.title("Customer Churn Analytics Dashboard")
+st.write(
+    "This application predicts the likelihood of a telecom customer "
+    "leaving the service based on account and usage details."
 )
 
-# ---------------------------------
-# Load model
-# ---------------------------------
+st.caption("Developed by Akshaya")
+
+# ----------------------------
+# Load Trained Model
+# ----------------------------
 @st.cache_resource
-def train_and_load_model():
-    import pandas as pd
-    from sklearn.model_selection import train_test_split
-    from sklearn.pipeline import Pipeline
-    from sklearn.compose import ColumnTransformer
-    from sklearn.preprocessing import OneHotEncoder
-    from sklearn.impute import SimpleImputer
-    from sklearn.ensemble import RandomForestClassifier
+def load_model():
+    return joblib.load("churn_model.pkl")
 
-    df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+model = load_model()
 
-    df.drop("customerID", axis=1, inplace=True)
+# ----------------------------
+# User Input Form
+# ----------------------------
+st.subheader("Enter Customer Details")
 
-    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
-    df["TotalCharges"].fillna(df["TotalCharges"].median(), inplace=True)
+gender = st.selectbox("Gender", ["Male", "Female"])
+senior = st.selectbox("Senior Citizen", ["Yes", "No"])
+partner = st.selectbox("Has Partner", ["Yes", "No"])
+dependents = st.selectbox("Has Dependents", ["Yes", "No"])
+tenure = st.slider("Tenure (months)", 0, 72, 12)
 
-    y = df["Churn"].map({"Yes": 1, "No": 0})
-    X = df.drop("Churn", axis=1)
+phone_service = st.selectbox("Phone Service", ["Yes", "No"])
+multiple_lines = st.selectbox("Multiple Lines", ["Yes", "No", "No phone service"])
 
-    num_cols = X.select_dtypes(include=["int64", "float64"]).columns
-    cat_cols = X.select_dtypes(include=["object"]).columns
-
-    X_train, _, y_train, _ = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
-    )
-
-    numeric_pipeline = Pipeline(
-        steps=[("imputer", SimpleImputer(strategy="median"))]
-    )
-
-    categorical_pipeline = Pipeline(
-        steps=[
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("encoder", OneHotEncoder(handle_unknown="ignore"))
-        ]
-    )
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numeric_pipeline, num_cols),
-            ("cat", categorical_pipeline, cat_cols)
-        ]
-    )
-
-    model = Pipeline(
-        steps=[
-            ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(
-                n_estimators=150,
-                random_state=42,
-                class_weight="balanced"
-            ))
-        ]
-    )
-
-    model.fit(X_train, y_train)
-
-    return model
-
-
-model = train_and_load_model()
-
-
-# ---------------------------------
-# Sidebar Inputs
-# ---------------------------------
-st.sidebar.header("📁 Customer Profile")
-
-gender = st.sidebar.selectbox("Gender", ["Male", "Female"])
-SeniorCitizen = st.sidebar.selectbox("Senior Citizen", [0, 1])
-Partner = st.sidebar.selectbox("Partner", ["Yes", "No"])
-Dependents = st.sidebar.selectbox("Dependents", ["Yes", "No"])
-
-st.sidebar.header("📄 Account Information")
-tenure = st.sidebar.slider("Tenure (months)", 0, 72, 12)
-Contract = st.sidebar.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-PaymentMethod = st.sidebar.selectbox(
-    "Payment Method",
-    ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"]
+internet_service = st.selectbox(
+    "Internet Service", ["DSL", "Fiber optic", "No"]
 )
-PaperlessBilling = st.sidebar.selectbox("Paperless Billing", ["Yes", "No"])
 
-st.sidebar.header("🌐 Services Used")
-PhoneService = st.sidebar.selectbox("Phone Service", ["Yes", "No"])
-MultipleLines = st.sidebar.selectbox("Multiple Lines", ["Yes", "No", "No phone service"])
-InternetService = st.sidebar.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-OnlineSecurity = st.sidebar.selectbox("Online Security", ["Yes", "No", "No internet service"])
-OnlineBackup = st.sidebar.selectbox("Online Backup", ["Yes", "No", "No internet service"])
-DeviceProtection = st.sidebar.selectbox("Device Protection", ["Yes", "No", "No internet service"])
-TechSupport = st.sidebar.selectbox("Tech Support", ["Yes", "No", "No internet service"])
-StreamingTV = st.sidebar.selectbox("Streaming TV", ["Yes", "No", "No internet service"])
-StreamingMovies = st.sidebar.selectbox("Streaming Movies", ["Yes", "No", "No internet service"])
+online_security = st.selectbox(
+    "Online Security", ["Yes", "No", "No internet service"]
+)
+online_backup = st.selectbox(
+    "Online Backup", ["Yes", "No", "No internet service"]
+)
+device_protection = st.selectbox(
+    "Device Protection", ["Yes", "No", "No internet service"]
+)
+tech_support = st.selectbox(
+    "Tech Support", ["Yes", "No", "No internet service"]
+)
+streaming_tv = st.selectbox(
+    "Streaming TV", ["Yes", "No", "No internet service"]
+)
+streaming_movies = st.selectbox(
+    "Streaming Movies", ["Yes", "No", "No internet service"]
+)
 
-st.sidebar.header("💳 Billing")
-MonthlyCharges = st.sidebar.number_input("Monthly Charges", min_value=0.0, value=70.0)
-TotalCharges = st.sidebar.number_input("Total Charges", min_value=0.0, value=500.0)
+contract = st.selectbox(
+    "Contract Type", ["Month-to-month", "One year", "Two year"]
+)
+paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+payment_method = st.selectbox(
+    "Payment Method",
+    [
+        "Electronic check",
+        "Mailed check",
+        "Bank transfer (automatic)",
+        "Credit card (automatic)"
+    ]
+)
 
-# ---------------------------------
-# Prepare input dataframe
-# ---------------------------------
-input_df = pd.DataFrame([{
-    "gender": gender,
-    "SeniorCitizen": SeniorCitizen,
-    "Partner": Partner,
-    "Dependents": Dependents,
-    "tenure": tenure,
-    "PhoneService": PhoneService,
-    "MultipleLines": MultipleLines,
-    "InternetService": InternetService,
-    "OnlineSecurity": OnlineSecurity,
-    "OnlineBackup": OnlineBackup,
-    "DeviceProtection": DeviceProtection,
-    "TechSupport": TechSupport,
-    "StreamingTV": StreamingTV,
-    "StreamingMovies": StreamingMovies,
-    "Contract": Contract,
-    "PaperlessBilling": PaperlessBilling,
-    "PaymentMethod": PaymentMethod,
-    "MonthlyCharges": MonthlyCharges,
-    "TotalCharges": TotalCharges
-}])
+monthly_charges = st.number_input(
+    "Monthly Charges", min_value=0.0, value=70.0
+)
+total_charges = st.number_input(
+    "Total Charges", min_value=0.0, value=1000.0
+)
 
-# ---------------------------------
-# Main Dashboard Output
-# ---------------------------------
-st.markdown("---")
-st.subheader("📈 Retention Risk Assessment")
+# ----------------------------
+# Prediction
+# ----------------------------
+if st.button("Predict Churn Risk"):
+    input_df = pd.DataFrame({
+        "gender": [gender],
+        "SeniorCitizen": [1 if senior == "Yes" else 0],
+        "Partner": [partner],
+        "Dependents": [dependents],
+        "tenure": [tenure],
+        "PhoneService": [phone_service],
+        "MultipleLines": [multiple_lines],
+        "InternetService": [internet_service],
+        "OnlineSecurity": [online_security],
+        "OnlineBackup": [online_backup],
+        "DeviceProtection": [device_protection],
+        "TechSupport": [tech_support],
+        "StreamingTV": [streaming_tv],
+        "StreamingMovies": [streaming_movies],
+        "Contract": [contract],
+        "PaperlessBilling": [paperless_billing],
+        "PaymentMethod": [payment_method],
+        "MonthlyCharges": [monthly_charges],
+        "TotalCharges": [total_charges],
+    })
 
-if st.button("Run Churn Analysis"):
-    prediction = model.predict(input_df)[0]
-    probability = model.predict_proba(input_df)[0][1]
+    try:
+        prediction = model.predict(input_df)[0]
+        probability = model.predict_proba(input_df)[0][1]
 
-    col1, col2 = st.columns(2)
+        st.subheader("Prediction Result")
 
-    with col1:
-        st.metric(
-            label="Churn Probability",
-            value=f"{probability:.2%}"
-        )
-
-    with col2:
         if prediction == 1:
-            st.metric(
-                label="Customer Status",
-                value="High Risk",
-                delta="⚠️ Action Required"
+            st.error(
+                f"High risk of churn\n\nEstimated probability: {probability:.2%}"
             )
         else:
-            st.metric(
-                label="Customer Status",
-                value="Low Risk",
-                delta="✅ Stable"
+            st.success(
+                f"Low risk of churn\n\nEstimated probability: {probability:.2%}"
             )
 
-    st.markdown("---")
-
-    if prediction == 1:
-        st.warning(
-            "🔸 This customer shows a **high likelihood of churn.**\n\n"
-            "Recommended actions:\n"
-            "- Offer personalized retention deals\n"
-            "- Check for service complaints\n"
-            "- Provide loyalty rewards"
-        )
-    else:
-        st.success(
-            "✅ This customer is **likely to stay.**\n\n"
-            "Maintain engagement with quality service and regular communication."
+        st.caption(
+            "Probability indicates the model's confidence, "
+            "not a medical or financial guarantee."
         )
 
-# ---------------------------------
-# Footer
-# ---------------------------------
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center; color: grey; font-size: 14px;'>
-        Developed by <b>Akshaya</b> — Biomedical Engineering Student<br>
-        © 2025 Customer Churn Prediction Project
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.caption(
-    "Note: The prediction reflects model confidence based on historical data. "
-    "It is intended for decision-support purposes, not a guarantee of behavior."
-)
+    except Exception as e:
+        st.error("Prediction failed due to input or model mismatch.")
+        st.code(str(e))
