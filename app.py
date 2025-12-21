@@ -33,13 +33,15 @@ def train_and_load_model():
 
     df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
-    df.drop("customerID", axis=1, inplace=True)
+    if 'customerID' in df.columns:
+        df.drop("customerID",axis=1,inplace=True)
 
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
     df["TotalCharges"].fillna(df["TotalCharges"].median(), inplace=True)
 
-    y = df["Churn"].map({"Yes": 1, "No": 0})
-    X = df.drop("Churn", axis=1)
+    assert 'Churn' in df.columns, "Target column 'Churn' missing"
+    X=df.drop(columns=['Churn'])
+    y=df['Churn']
 
     num_cols = X.select_dtypes(include=["int64", "float64"]).columns
     cat_cols = X.select_dtypes(include=["object"]).columns
@@ -210,3 +212,4 @@ st.caption(
     "Note: The prediction reflects model confidence based on historical data. "
     "It is intended for decision-support purposes, not a guarantee of behavior."
 )
+
