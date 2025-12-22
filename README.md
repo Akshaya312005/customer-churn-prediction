@@ -16,3 +16,6 @@ based on demographic details, service usage, and billing information.
 
 ## Disclaimer
 This application is for educational and decision-support purposes only.
+
+
+##LiveDemo: https://customer-churn-prediction-gvzzgypgyktaupgon6pz8f.streamlit.app/
