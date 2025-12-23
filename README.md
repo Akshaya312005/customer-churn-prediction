@@ -14,5 +14,7 @@ A machine learning application to predict customer churn using demographic and s
 - scikit-learn
 - Streamlit
 
+ ## Live Demo : https://customer-churn-prediction-tlxtqxmm6utgfstdqqxf9y.streamlit.app/ 
+
 ## Author
 Akshaya
